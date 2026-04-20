@@ -1,0 +1,359 @@
+:root {
+  font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #182026;
+  background:
+    radial-gradient(circle at top left, rgba(252, 177, 150, 0.35), transparent 28%),
+    radial-gradient(circle at top right, rgba(241, 213, 165, 0.28), transparent 32%),
+    linear-gradient(180deg, #fff9f4 0%, #f4efe8 100%);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.app-shell {
+  width: min(1440px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 32px 0 48px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 24px;
+  align-items: end;
+  padding: 24px 4px 32px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: #9b5c49;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+  max-width: 12ch;
+}
+
+.hero-text {
+  max-width: 58ch;
+  margin-top: 18px;
+  color: #475467;
+  line-height: 1.7;
+}
+
+.hero-badge {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  align-self: start;
+}
+
+.hero-badge span {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(155, 92, 73, 0.18);
+  color: #7b4c3f;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 0.9fr 1.2fr 0.75fr;
+  gap: 20px;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(132, 94, 80, 0.12);
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(115, 79, 61, 0.08);
+}
+
+.section-head {
+  margin-bottom: 18px;
+}
+
+.section-head h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.section-head p {
+  margin: 8px 0 0;
+  color: #667085;
+  line-height: 1.6;
+}
+
+.mode-switch {
+  display: inline-flex;
+  padding: 4px;
+  background: rgba(245, 233, 225, 0.9);
+  border-radius: 999px;
+  gap: 4px;
+}
+
+.mode-switch button {
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 10px 16px;
+  color: #7a5d54;
+}
+
+.mode-switch button.active {
+  background: #ffffff;
+  color: #1f2937;
+  box-shadow: 0 8px 18px rgba(59, 38, 24, 0.08);
+}
+
+.field {
+  margin-top: 20px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+textarea,
+input[type="file"] {
+  width: 100%;
+  border: 1px solid rgba(124, 91, 73, 0.18);
+  background: rgba(255, 252, 248, 0.92);
+  border-radius: 20px;
+  padding: 16px;
+  color: #17212b;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 300px;
+  line-height: 1.7;
+}
+
+.upload-field {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.helper,
+.disclaimer {
+  color: #667085;
+  line-height: 1.6;
+}
+
+.primary-action {
+  width: 100%;
+  margin-top: 18px;
+  border: 0;
+  border-radius: 18px;
+  padding: 15px 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #d1684d 0%, #ea8d62 100%);
+  color: #fffdf9;
+  box-shadow: 0 16px 32px rgba(209, 104, 77, 0.28);
+}
+
+.primary-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-banner {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 227, 227, 0.92);
+  color: #a23333;
+}
+
+.empty-state,
+.empty-history {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  border: 1px dashed rgba(129, 97, 82, 0.2);
+  color: #667085;
+  text-align: center;
+}
+
+.summary-card {
+  display: grid;
+  grid-template-columns: 0.65fr 1fr;
+  gap: 18px;
+  margin-bottom: 18px;
+  padding: 18px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 245, 236, 0.94), rgba(255, 255, 255, 0.94));
+  border: 1px solid rgba(125, 88, 69, 0.12);
+}
+
+.summary-card h3 {
+  margin: 6px 0 0;
+  font-size: 1.65rem;
+}
+
+.card-label {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #946353;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.metric-card,
+.info-card {
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(125, 88, 69, 0.1);
+}
+
+.metric-card span {
+  color: #946353;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.8rem;
+}
+
+.metric-card strong {
+  display: block;
+  margin-top: 10px;
+  font-size: 2.1rem;
+}
+
+.metric-card p,
+.info-card p,
+.info-card li {
+  color: #475467;
+  line-height: 1.7;
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.info-card {
+  margin-bottom: 14px;
+}
+
+.info-card ul {
+  padding-left: 18px;
+  margin: 0;
+}
+
+.risk-card {
+  background: rgba(255, 244, 240, 0.96);
+}
+
+.history-panel {
+  max-height: 980px;
+  overflow: auto;
+}
+
+.history-item {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 16px;
+  margin-bottom: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.history-stage {
+  font-size: 0.8rem;
+  color: #9b5c49;
+}
+
+.history-item strong {
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+.history-item small {
+  color: #667085;
+}
+
+@media (max-width: 1180px) {
+  .workspace,
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-badge {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    width: min(100vw - 24px, 100%);
+    padding-top: 20px;
+  }
+
+  .panel {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .metrics-grid,
+  .analysis-grid,
+  .summary-card {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    font-size: 2.7rem;
+  }
+}
+

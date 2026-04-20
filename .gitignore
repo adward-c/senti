@@ -1,0 +1,11 @@
+.DS_Store
+.env
+.env.local
+.env.production
+frontend/node_modules
+frontend/dist
+backend/.cache
+backend/bin
+uploads/*
+!uploads/.gitkeep
+
