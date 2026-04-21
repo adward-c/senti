@@ -1,0 +1,70 @@
+Senti Repository License
+Copyright (c) 2026 Senti Contributors. All rights reserved.
+
+This repository, including but not limited to its source code, UI design, interaction
+flows, prompts, business logic, configuration, documentation, assets, and derived
+materials (collectively, the "Work"), is protected by copyright and other applicable
+laws.
+
+1. Default rule
+
+No permission is granted to use, copy, modify, merge, publish, distribute, sublicense,
+sell, host, deploy, commercialize, or create derivative works from the Work, except as
+expressly stated below.
+
+2. Limited permission
+
+You may view, clone, and run the Work solely for the following non-commercial purposes:
+
+- personal learning;
+- internal evaluation;
+- security review;
+- non-public technical testing.
+
+3. Prohibited uses
+
+Without prior written permission from the copyright holder, you may not:
+
+- use the Work or any substantial part of it for commercial purposes;
+- copy, repackage, resell, license, sublicense, or distribute the Work;
+- host, deploy, provide, or operate the Work as a product, SaaS, service, demo, or
+  commercial offering;
+- reproduce, imitate, or substantially clone the Work's product concept, feature set,
+  interface design, workflow, prompt structure, rule system, or output format for
+  commercial gain;
+- create derivative works for sale, client delivery, paid consulting, or any revenue-
+  generating activity;
+- remove, alter, or hide any ownership, attribution, or license notice contained in the
+  Work.
+
+4. Commercial use
+
+Any commercial use requires prior written authorization from the copyright holder.
+"Commercial use" includes any use intended for direct or indirect monetary gain, customer
+delivery, business operation, lead generation, paid subscription, advertising, resale, or
+brand promotion.
+
+5. Ownership
+
+All rights, title, and interest in and to the Work remain with the copyright holder and
+contributors. No trademark, patent, publicity, or other intellectual property rights are
+granted by this license.
+
+6. Enforcement
+
+Unauthorized use automatically terminates any limited permission granted by this license.
+The copyright holder reserves the right to pursue all available legal remedies.
+
+7. Warranty and liability
+
+THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
+CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE,
+ARISING FROM, OUT OF, OR IN CONNECTION WITH THE WORK OR THE USE OF OR OTHER DEALINGS IN THE
+WORK.
+
+8. Contact
+
+For commercial licensing or other permissions, contact the repository owner or maintainers
+through the official project channel.

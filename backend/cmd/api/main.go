@@ -33,11 +33,7 @@ func main() {
 	defer pool.Close()
 
 	repo := store.NewPostgresRepository(pool)
-	rules, err := analyzer.LoadRules(cfg.ChatSkillsDir)
-	if err != nil {
-		logger.Error("failed to load chat-skills rules", "error", err)
-		os.Exit(1)
-	}
+	rules := analyzer.LoadRules()
 
 	ocr := analyzer.NewTesseractOCR(cfg.OCRLanguage, logger)
 	kimi := analyzer.NewKimiClient(cfg, logger)

@@ -50,7 +50,6 @@ DATABASE_URL=postgres://senti:your_strong_password@postgres:5432/senti?sslmode=d
 HTTP_ADDR=:8080
 CORS_ORIGIN=https://your-domain.com
 UPLOAD_DIR=/app/uploads
-CHAT_SKILLS_DIR=/app/chat-skills
 KIMI_API_KEY=your_kimi_api_key
 KIMI_BASE_URL=https://api.moonshot.cn/v1
 KIMI_MODEL=moonshot-v1-8k

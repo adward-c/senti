@@ -25,7 +25,6 @@ RUN printf '%s\n' \
   && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /app/senti-api /usr/local/bin/senti-api
-COPY chat-skills /app/chat-skills
 RUN mkdir -p /app/uploads
 EXPOSE 8080
 CMD ["senti-api"]
