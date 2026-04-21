@@ -293,6 +293,34 @@ textarea {
   background: rgba(255, 244, 240, 0.96);
 }
 
+.conversation-list {
+  display: grid;
+  gap: 10px;
+}
+
+.conversation-item {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(249, 246, 241, 0.9);
+}
+
+.conversation-item.user {
+  border-left: 4px solid #d1684d;
+}
+
+.conversation-item.target {
+  border-left: 4px solid #c39a5b;
+}
+
+.speaker-tag {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a5e4d;
+}
+
 .history-panel {
   max-height: 980px;
   overflow: auto;
@@ -356,4 +384,3 @@ textarea {
     font-size: 2.7rem;
   }
 }
-

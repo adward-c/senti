@@ -208,6 +208,23 @@ onMounted(() => {
             <p class="card-label">风险提醒</p>
             <p>{{ activeRecord.result.riskNote }}</p>
           </article>
+
+          <article class="info-card conversation-card">
+            <p class="card-label">聊天记录</p>
+            <div class="conversation-list">
+              <div
+                v-for="(message, index) in activeRecord.structuredMessages"
+                :key="`${message.speaker}-${index}`"
+                class="conversation-item"
+                :class="message.speaker"
+              >
+                <span class="speaker-tag">
+                  {{ message.speaker === 'user' ? '我' : '对方' }}
+                </span>
+                <p>{{ message.content }}</p>
+              </div>
+            </div>
+          </article>
         </template>
       </section>
 
