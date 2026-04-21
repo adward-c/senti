@@ -32,6 +32,7 @@ func NewServer(cfg config.Config, repo store.Repository, analyzerService *analyz
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", server.handleHealth)
+	mux.HandleFunc("/api/ai/availability", server.handleAIAvailability)
 	mux.HandleFunc("/api/history", server.handleHistory)
 	mux.HandleFunc("/api/history/", server.handleHistoryDetail)
 	mux.HandleFunc("/api/analyze/text", server.handleAnalyzeText)
@@ -75,6 +76,20 @@ func (s *Server) handleHealth(writer http.ResponseWriter, request *http.Request)
 		return
 	}
 	writeJSON(writer, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (s *Server) handleAIAvailability(writer http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		writeError(writer, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	result, err := s.analyzer.KimiAvailability(request.Context())
+	if err != nil {
+		writeJSON(writer, http.StatusBadGateway, result)
+		return
+	}
+	writeJSON(writer, http.StatusOK, result)
 }
 
 func (s *Server) handleHistory(writer http.ResponseWriter, request *http.Request) {

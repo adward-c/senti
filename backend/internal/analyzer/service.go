@@ -27,6 +27,10 @@ func NewService(repo store.Repository, rules Rules, ocr OCRProvider, kimi *KimiC
 	return &Service{repo: repo, rules: rules, ocr: ocr, kimi: kimi, logger: logger}
 }
 
+func (s *Service) KimiAvailability(ctx context.Context) (AvailabilityResult, error) {
+	return s.kimi.CheckAvailability(ctx)
+}
+
 func (s *Service) StoreUpload(uploadDir string, fileName string, data []byte) (string, error) {
 	if err := os.MkdirAll(uploadDir, 0o755); err != nil {
 		return "", err
@@ -61,9 +65,15 @@ func (s *Service) analyze(ctx context.Context, inputType, sourceText, imagePath,
 	}
 
 	features := ExtractFeatures(messages)
-	stage := DetectStage(features)
-	params := Quantize(features)
-	metrics := BuildMetrics(features, params)
+	semantic, err := s.kimi.GenerateSemanticLabels(ctx, s.rules, messages, features)
+	if err != nil {
+		s.logger.Warn("kimi semantic labeling failed", "error", err)
+		return domain.AnalysisRecord{}, err
+	}
+	stage, stageCandidates, stageReason := DetectStage(features, semantic)
+	params, paramTraces := Quantize(features, semantic, stage)
+	metrics, metricInputs := BuildMetrics(features, params)
+	strategy := DecideStrategy(stage, metrics, params, semantic, sourceText)
 
 	record := domain.AnalysisRecord{
 		ID:                 uuid.NewString(),
@@ -76,12 +86,23 @@ func (s *Service) analyze(ctx context.Context, inputType, sourceText, imagePath,
 			Stage:        stage,
 			Metrics:      metrics,
 			Conversation: messages,
-			Disclaimer:   "仅供沟通参考，不构成心理诊断或关系结论。",
-			RawOCRText:   rawOCRText,
+			Semantic:     semantic,
+			Strategy:     strategy,
+			Debug: domain.AnalysisDebug{
+				FactFeatures:    features,
+				SemanticLabels:  semantic,
+				StageCandidates: stageCandidates,
+				StageReason:     stageReason,
+				ParamTraces:     paramTraces,
+				MetricInputs:    metricInputs,
+				Strategy:        strategy,
+			},
+			Disclaimer: "仅供沟通参考，不构成心理诊断或关系结论。",
+			RawOCRText: rawOCRText,
 		},
 	}
 
-	narrative, err := s.kimi.Generate(ctx, s.rules, record)
+	narrative, err := s.kimi.GenerateNarrative(ctx, s.rules, record)
 	if err != nil {
 		s.logger.Warn("kimi generation failed", "error", err)
 		return domain.AnalysisRecord{}, err

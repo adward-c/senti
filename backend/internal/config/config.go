@@ -24,9 +24,9 @@ func Load() (Config, error) {
 		CORSOrigin:    getEnv("CORS_ORIGIN", "http://localhost"),
 		UploadDir:     getEnv("UPLOAD_DIR", "/app/uploads"),
 		ChatSkillsDir: getEnv("CHAT_SKILLS_DIR", "/app/chat-skills"),
-		KimiAPIKey:    os.Getenv("KIMI_API_KEY"),
+		KimiAPIKey:    firstEnv("KIMI_API_KEY", "MOONSHOT_API_KEY"),
 		KimiBaseURL:   getEnv("KIMI_BASE_URL", "https://api.moonshot.cn/v1"),
-		KimiModel:     getEnv("KIMI_MODEL", "moonshot-v1-8k"),
+		KimiModel:     getEnv("KIMI_MODEL", "kimi-k2.6"),
 		OCRLanguage:   getEnv("OCR_LANG", "chi_sim+eng"),
 	}
 	if cfg.DatabaseURL == "" {
@@ -40,4 +40,13 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func firstEnv(keys ...string) string {
+	for _, key := range keys {
+		if value := os.Getenv(key); value != "" {
+			return value
+		}
+	}
+	return ""
 }

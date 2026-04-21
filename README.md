@@ -29,24 +29,36 @@ flowchart TD
 ## 后端功能逻辑
 
 ```mermaid
-flowchart TD
-    A["请求进入后端"] --> B{"输入类型"}
-    B -->|"文本"| C["文本清洗与结构化"]
-    B -->|"图片"| D["图片保存到 Volume"]
-    D --> E["OCR 提取文本"]
-    E --> C
-    C --> F["解析聊天消息"]
-    F --> G["提取互动特征"]
-    G --> H["阶段识别"]
-    G --> I["参数量化"]
-    I --> J["计算 IVI / SPE / EWS"]
-    H --> K["分析编排层"]
-    J --> K
-    K --> M["调用 Kimi 生成分析文案"]
-    M --> O["合并结果"]
-    O --> P["写入 PostgreSQL"]
-    O --> Q["返回前端结果"]
+flowchart TB
+    subgraph ENTRY["请求入口"]
+        T["POST /api/analyze/text"]
+        I["POST /api/analyze/image"]
+    end
+
+    subgraph INGEST["输入处理"]
+        U["保存上传文件"]
+        O["Tesseract OCR 提取文本"]
+        P["ParseConversation<br/>结构化消息"]
+    end
+
+    subgraph ANALYZE["分析主干"]
+        F["ExtractFeatures<br/>事实特征提取"]
+        S["Kimi 语义标签<br/>stage candidates / signals / evidence"]
+        D["DetectStage<br/>规则候选 + 语义候选融合裁决"]
+        Q["Quantize<br/>参数量化"]
+        M["BuildMetrics + DecideStrategy<br/>计算 IVI / SPE / EWS 与策略"]
+        N["Kimi 结果生成<br/>summary / attitude / suggestions / replies"]
+        R["组装 AnalysisRecord"]
+    end
+
+    T --> P
+    I --> U --> O --> P
+    P --> F --> S --> D --> Q --> M --> N --> R
+    R --> DB[("PostgreSQL")]
+    R --> API["返回分析结果"]
 ```
+
+补充说明：`chat-skills` 规则在服务启动时一次性加载，随后被后端量化逻辑和两次 Kimi 调用共同复用，因此不再单独画成多条交叉箭头。
 
 ## 本地运行
 
@@ -79,5 +91,6 @@ docker compose up --build
 ## 说明
 
 - `KIMI_API_KEY` 为必填项，未配置时后端会直接报错。
+- Kimi 请求仅使用 `https://api.moonshot.cn/v1`。
 - OCR 由后端统一调用，不直接暴露给前端。
 - 上传图片存储在 Docker Volume 中，避免容器重启后丢失。

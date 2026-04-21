@@ -293,6 +293,81 @@ textarea {
   background: rgba(255, 244, 240, 0.96);
 }
 
+.strategy-card {
+  background: linear-gradient(135deg, rgba(255, 246, 235, 0.96), rgba(255, 255, 255, 0.96));
+}
+
+.strategy-head,
+.trace-head,
+.evidence-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.strategy-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(255, 248, 240, 0.98);
+  color: #8a5e4d;
+}
+
+.strategy-tag.attack {
+  background: rgba(223, 249, 228, 0.95);
+  color: #1f7a41;
+}
+
+.strategy-tag.pull {
+  background: rgba(255, 241, 220, 0.95);
+  color: #9b5c1c;
+}
+
+.strategy-tag.reset,
+.strategy-tag.risk_block {
+  background: rgba(255, 230, 230, 0.95);
+  color: #a23333;
+}
+
+.compact-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.evidence-list,
+.trace-list {
+  display: grid;
+  gap: 12px;
+}
+
+.evidence-item,
+.trace-item {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(249, 246, 241, 0.9);
+}
+
+.evidence-meta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  color: #8a5e4d;
+  font-size: 0.82rem;
+}
+
+.evidence-item p,
+.trace-item small {
+  margin: 8px 0 0;
+}
+
+.legacy-note {
+  color: #667085;
+}
+
 .conversation-list {
   display: grid;
   gap: 10px;

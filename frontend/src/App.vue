@@ -18,6 +18,22 @@ const history = ref<AnalysisSummary[]>([])
 const activeRecord = ref<AnalysisRecord | null>(null)
 
 const hasResult = computed(() => activeRecord.value !== null)
+const semanticSignals = computed(() =>
+  activeRecord.value ? Object.entries(activeRecord.value.result.semantic.signals ?? {}) : [],
+)
+const metricInputs = computed(() =>
+  activeRecord.value ? Object.entries(activeRecord.value.result.debug.metricInputs ?? {}) : [],
+)
+const paramTraces = computed(() =>
+  activeRecord.value ? Object.entries(activeRecord.value.result.debug.paramTraces ?? {}) : [],
+)
+const hasSemanticDetails = computed(
+  () =>
+    semanticSignals.value.length > 0 ||
+    Boolean(activeRecord.value?.result.semantic.topicType) ||
+    (activeRecord.value?.result.semantic.evidence?.length ?? 0) > 0,
+)
+const hasStrategyDetails = computed(() => Boolean(activeRecord.value?.result.strategy.label))
 
 async function loadHistory() {
   try {
@@ -203,6 +219,92 @@ onMounted(() => {
             <p class="card-label">为什么是这个方向</p>
             <p>{{ activeRecord.result.rationale }}</p>
           </article>
+
+          <article class="info-card strategy-card">
+            <p class="card-label">策略决策</p>
+            <template v-if="hasStrategyDetails">
+              <div class="strategy-head">
+                <strong>{{ activeRecord.result.strategy.label }}</strong>
+                <span :class="['strategy-tag', activeRecord.result.strategy.type]">
+                  {{ activeRecord.result.strategy.type }}
+                </span>
+              </div>
+              <p>{{ activeRecord.result.strategy.reason }}</p>
+            </template>
+            <p v-else class="legacy-note">该历史记录生成于旧版分析链路，暂无策略决策数据。</p>
+          </article>
+
+          <div class="analysis-grid">
+            <article class="info-card">
+              <p class="card-label">语义标签</p>
+              <template v-if="hasSemanticDetails">
+                <p>话题类型：{{ activeRecord.result.semantic.topicType || '未标注' }}</p>
+                <ul class="compact-list">
+                  <li v-for="[key, value] in semanticSignals" :key="key">
+                    {{ key }}：{{ value.toFixed(2) }}
+                  </li>
+                </ul>
+              </template>
+              <p v-else class="legacy-note">该历史记录生成于旧版分析链路，暂无语义标签数据。</p>
+            </article>
+            <article class="info-card">
+              <p class="card-label">阶段融合依据</p>
+              <template v-if="activeRecord.result.debug.stageReason">
+                <p>{{ activeRecord.result.debug.stageReason }}</p>
+                <ul class="compact-list">
+                  <li v-for="item in activeRecord.result.debug.stageCandidates" :key="item">{{ item }}</li>
+                </ul>
+              </template>
+              <p v-else class="legacy-note">该历史记录生成于旧版分析链路，暂无阶段融合依据。</p>
+            </article>
+          </div>
+
+          <article class="info-card">
+            <p class="card-label">关键证据句</p>
+            <div v-if="activeRecord.result.semantic.evidence?.length" class="evidence-list">
+              <div
+                v-for="item in activeRecord.result.semantic.evidence"
+                :key="`${item.type}-${item.quote}`"
+                class="evidence-item"
+              >
+                <div class="evidence-meta">
+                  <span>{{ item.type }}</span>
+                  <span>{{ item.speaker === 'user' ? '我' : '对方' }}</span>
+                  <span>{{ item.score.toFixed(2) }}</span>
+                </div>
+                <p>{{ item.quote }}</p>
+              </div>
+            </div>
+            <p v-else class="legacy-note">当前记录没有可展示的证据句，通常是旧版记录或本次分析未提取到强证据。</p>
+          </article>
+
+          <div class="analysis-grid">
+            <article class="info-card">
+              <p class="card-label">量化参数</p>
+              <div v-if="paramTraces.length" class="trace-list">
+                <div v-for="[key, trace] in paramTraces" :key="key" class="trace-item">
+                  <div class="trace-head">
+                    <strong>{{ key }}</strong>
+                    <span>{{ trace.value.toFixed(2) }}</span>
+                  </div>
+                  <small>基准：{{ trace.basis.toFixed(2) }}</small>
+                  <ul class="compact-list">
+                    <li v-for="item in trace.adjustments" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+              </div>
+              <p v-else class="legacy-note">当前记录没有量化参数追踪数据。</p>
+            </article>
+            <article class="info-card">
+              <p class="card-label">指标输入</p>
+              <ul v-if="metricInputs.length" class="compact-list">
+                <li v-for="[key, value] in metricInputs" :key="key">
+                  {{ key }}：{{ value.toFixed(2) }}
+                </li>
+              </ul>
+              <p v-else class="legacy-note">当前记录没有指标输入追踪数据。</p>
+            </article>
+          </div>
 
           <article class="info-card risk-card">
             <p class="card-label">风险提醒</p>
