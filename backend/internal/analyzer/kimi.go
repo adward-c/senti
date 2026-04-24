@@ -15,6 +15,7 @@ import (
 
 	"senti/backend/internal/config"
 	"senti/backend/internal/domain"
+	"senti/backend/internal/observability"
 )
 
 type KimiClient struct {
@@ -76,7 +77,12 @@ func NewKimiClient(cfg config.Config, logger *slog.Logger) *KimiClient {
 	}
 }
 
-func (c *KimiClient) CheckAvailability(ctx context.Context) (AvailabilityResult, error) {
+func (c *KimiClient) CheckAvailability(ctx context.Context) (result AvailabilityResult, err error) {
+	start := time.Now()
+	defer func() {
+		observability.DefaultMetrics.RecordKimi("availability", err, time.Since(start))
+	}()
+
 	if c.apiKey == "" {
 		return AvailabilityResult{
 			OK:      false,
@@ -87,7 +93,7 @@ func (c *KimiClient) CheckAvailability(ctx context.Context) (AvailabilityResult,
 	}
 
 	baseURL := c.currentBaseURL()
-	result, err := c.checkModels(ctx, baseURL)
+	result, err = c.checkModels(ctx, baseURL)
 	if err == nil {
 		c.setBaseURL(baseURL)
 		result.BaseURL = baseURL
@@ -111,7 +117,12 @@ func (c *KimiClient) CheckAvailability(ctx context.Context) (AvailabilityResult,
 	}, err
 }
 
-func (c *KimiClient) GenerateSemanticLabels(ctx context.Context, rules Rules, messages []domain.Message, features domain.FactFeatures) (domain.SemanticLabels, error) {
+func (c *KimiClient) GenerateSemanticLabels(ctx context.Context, rules Rules, messages []domain.Message, features domain.FactFeatures) (labels domain.SemanticLabels, err error) {
+	start := time.Now()
+	defer func() {
+		observability.DefaultMetrics.RecordKimi("semantic_labels", err, time.Since(start))
+	}()
+
 	if _, err := c.CheckAvailability(ctx); err != nil {
 		return domain.SemanticLabels{}, err
 	}
@@ -157,7 +168,7 @@ func (c *KimiClient) GenerateSemanticLabels(ctx context.Context, rules Rules, me
 		return domain.SemanticLabels{}, err
 	}
 	if response.StatusCode >= 300 {
-		c.logger.Warn("kimi request failed", "status", response.StatusCode, "body", string(responseBody))
+		c.logger.Warn("kimi request failed", "status", response.StatusCode)
 		return domain.SemanticLabels{}, fmt.Errorf("kimi request failed with status %d", response.StatusCode)
 	}
 
@@ -190,7 +201,12 @@ func (c *KimiClient) GenerateSemanticLabels(ctx context.Context, rules Rules, me
 	return normalizeSemanticLabels(raw), nil
 }
 
-func (c *KimiClient) GenerateNarrative(ctx context.Context, rules Rules, record domain.AnalysisRecord) (generatedNarrative, error) {
+func (c *KimiClient) GenerateNarrative(ctx context.Context, rules Rules, record domain.AnalysisRecord) (narrativeResult generatedNarrative, err error) {
+	start := time.Now()
+	defer func() {
+		observability.DefaultMetrics.RecordKimi("narrative", err, time.Since(start))
+	}()
+
 	if _, err := c.CheckAvailability(ctx); err != nil {
 		return generatedNarrative{}, err
 	}
@@ -240,7 +256,7 @@ func (c *KimiClient) GenerateNarrative(ctx context.Context, rules Rules, record 
 		return generatedNarrative{}, err
 	}
 	if response.StatusCode >= 300 {
-		c.logger.Warn("kimi request failed", "status", response.StatusCode, "body", string(responseBody))
+		c.logger.Warn("kimi request failed", "status", response.StatusCode)
 		return generatedNarrative{}, fmt.Errorf("kimi request failed with status %d", response.StatusCode)
 	}
 
@@ -483,7 +499,7 @@ func (c *KimiClient) checkModels(ctx context.Context, baseURL string) (Availabil
 		return AvailabilityResult{}, err
 	}
 	if response.StatusCode >= 300 {
-		c.logger.Warn("kimi availability check failed", "status", response.StatusCode, "base_url", baseURL, "body", string(responseBody))
+		c.logger.Warn("kimi availability check failed", "status", response.StatusCode, "base_url", baseURL)
 		return AvailabilityResult{}, fmt.Errorf("kimi availability check failed with status %d", response.StatusCode)
 	}
 

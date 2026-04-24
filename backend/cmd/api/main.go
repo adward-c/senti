@@ -33,6 +33,14 @@ func main() {
 	defer pool.Close()
 
 	repo := store.NewPostgresRepository(pool)
+	if err := repo.EnsureSchema(ctx); err != nil {
+		logger.Error("failed to ensure database schema", "error", err)
+		os.Exit(1)
+	}
+	if err := repo.SeedInviteCode(ctx, cfg.InviteCode); err != nil {
+		logger.Error("failed to seed invite code", "error", err)
+		os.Exit(1)
+	}
 	rules := analyzer.LoadRules()
 
 	ocr := analyzer.NewTesseractOCR(cfg.OCRLanguage, logger)

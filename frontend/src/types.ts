@@ -98,6 +98,8 @@ export interface AnalysisResultPayload {
 
 export interface AnalysisRecord {
   id: string
+  userId?: string
+  saved: boolean
   inputType: string
   sourceText: string
   imagePath?: string
@@ -112,4 +114,14 @@ export interface AnalysisSummary {
   stage: string
   summary: string
   createdAt: string
+}
+
+export interface AuthUser {
+  id: string
+  username: string
+}
+
+export interface AuthResponse {
+  token: string
+  user: AuthUser
 }

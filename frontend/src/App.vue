@@ -1,9 +1,24 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import { analyzeImage, analyzeText, fetchAnalysis, fetchHistory } from './api'
-import type { AnalysisRecord, AnalysisSummary } from './types'
+import {
+  analyzeImage,
+  analyzeText,
+  deleteAnalysis,
+  fetchAnalysis,
+  fetchHistory,
+  login,
+  register,
+  saveAnalysis,
+  setAuthToken,
+} from './api'
+import type { AnalysisRecord, AnalysisSummary, AuthUser } from './types'
 
+const authMode = ref<'login' | 'register'>('login')
+const currentUser = ref<AuthUser | null>(null)
+const username = ref('')
+const password = ref('')
+const inviteCode = ref('')
 const mode = ref<'text' | 'image'>('text')
 const textInput = ref(`我：今天忙完了吗？
 对方：差不多，刚缓过来一点。
@@ -13,29 +28,22 @@ const textInput = ref(`我：今天忙完了吗？
 对方：这个倒是可以。`)
 const selectedFile = ref<File | null>(null)
 const loading = ref(false)
+const authLoading = ref(false)
 const errorMessage = ref('')
+const authError = ref('')
 const history = ref<AnalysisSummary[]>([])
 const activeRecord = ref<AnalysisRecord | null>(null)
 
 const hasResult = computed(() => activeRecord.value !== null)
-const semanticSignals = computed(() =>
-  activeRecord.value ? Object.entries(activeRecord.value.result.semantic.signals ?? {}) : [],
-)
-const metricInputs = computed(() =>
-  activeRecord.value ? Object.entries(activeRecord.value.result.debug.metricInputs ?? {}) : [],
-)
-const paramTraces = computed(() =>
-  activeRecord.value ? Object.entries(activeRecord.value.result.debug.paramTraces ?? {}) : [],
-)
-const hasSemanticDetails = computed(
-  () =>
-    semanticSignals.value.length > 0 ||
-    Boolean(activeRecord.value?.result.semantic.topicType) ||
-    (activeRecord.value?.result.semantic.evidence?.length ?? 0) > 0,
-)
-const hasStrategyDetails = computed(() => Boolean(activeRecord.value?.result.strategy.label))
+const isSaved = computed(() => Boolean(activeRecord.value?.saved))
+const canUseApp = computed(() => currentUser.value !== null)
+const evidenceItems = computed(() => activeRecord.value?.result.semantic.evidence ?? [])
 
 async function loadHistory() {
+  if (!currentUser.value) {
+    history.value = []
+    return
+  }
   try {
     const response = await fetchHistory()
     history.value = response.items
@@ -55,12 +63,70 @@ async function submit() {
     } else {
       throw new Error('请先选择聊天截图')
     }
-    await loadHistory()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '分析失败，请稍后再试'
   } finally {
     loading.value = false
   }
+}
+
+async function saveCurrentAnalysis() {
+  if (!activeRecord.value || activeRecord.value.saved) return
+  loading.value = true
+  errorMessage.value = ''
+  try {
+    activeRecord.value = await saveAnalysis(activeRecord.value)
+    await loadHistory()
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '保存失败，请稍后再试'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function removeHistory(id: string) {
+  loading.value = true
+  errorMessage.value = ''
+  try {
+    await deleteAnalysis(id)
+    if (activeRecord.value?.id === id) {
+      activeRecord.value = null
+    }
+    await loadHistory()
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '删除失败，请稍后再试'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function submitAuth() {
+  authLoading.value = true
+  authError.value = ''
+  try {
+    const response =
+      authMode.value === 'login'
+        ? await login(username.value, password.value)
+        : await register(username.value, password.value, inviteCode.value)
+    currentUser.value = response.user
+    setAuthToken(response.token)
+    localStorage.setItem('senti_user', JSON.stringify(response.user))
+    password.value = ''
+    inviteCode.value = ''
+    await loadHistory()
+  } catch (error) {
+    authError.value = error instanceof Error ? error.message : '登录失败'
+  } finally {
+    authLoading.value = false
+  }
+}
+
+function logout() {
+  currentUser.value = null
+  activeRecord.value = null
+  history.value = []
+  setAuthToken('')
+  localStorage.removeItem('senti_user')
 }
 
 async function openHistory(id: string) {
@@ -91,7 +157,12 @@ function formatDate(value: string) {
 }
 
 onMounted(() => {
-  void loadHistory()
+  setAuthToken(localStorage.getItem('senti_token') ?? '')
+  const storedUser = localStorage.getItem('senti_user')
+  if (storedUser) {
+    currentUser.value = JSON.parse(storedUser) as AuthUser
+    void loadHistory()
+  }
 })
 </script>
 
@@ -106,18 +177,43 @@ onMounted(() => {
         </p>
       </div>
       <div class="hero-badge">
-        <span>Vue 3</span>
-        <span>Go API</span>
-        <span>Kimi</span>
-        <span>Postgres</span>
+        <span v-if="currentUser">已登录：{{ currentUser.username }}</span>
+        <button v-if="currentUser" class="ghost-button" @click="logout">退出</button>
       </div>
     </header>
 
-    <main class="workspace">
+    <section v-if="!canUseApp" class="panel auth-panel">
+      <div class="section-head">
+        <h2>{{ authMode === 'login' ? '登录' : '注册内测账号' }}</h2>
+        <p>内测阶段需要账号和邀请码，避免公开访问造成模型调用成本失控。</p>
+      </div>
+      <div class="mode-switch">
+        <button :class="{ active: authMode === 'login' }" @click="authMode = 'login'">登录</button>
+        <button :class="{ active: authMode === 'register' }" @click="authMode = 'register'">注册</button>
+      </div>
+      <div class="field">
+        <label for="username">邮箱或用户名</label>
+        <input id="username" v-model="username" autocomplete="username" placeholder="name@example.com" />
+      </div>
+      <div class="field">
+        <label for="password">密码</label>
+        <input id="password" v-model="password" type="password" autocomplete="current-password" placeholder="至少 8 位" />
+      </div>
+      <div v-if="authMode === 'register'" class="field">
+        <label for="invite-code">邀请码</label>
+        <input id="invite-code" v-model="inviteCode" type="password" placeholder="请输入内测邀请码" />
+      </div>
+      <button class="primary-action" :disabled="authLoading" @click="submitAuth">
+        {{ authLoading ? '处理中...' : authMode === 'login' ? '登录' : '注册并登录' }}
+      </button>
+      <p v-if="authError" class="error-banner">{{ authError }}</p>
+    </section>
+
+    <main v-else class="workspace">
       <section class="panel input-panel">
         <div class="section-head">
           <h2>输入内容</h2>
-          <p>支持文本粘贴或长截图上传，长图会先走后端 OCR 再进入分析引擎。</p>
+          <p>本次分析默认不保存。需要回看时，请在结果页点击保存。</p>
         </div>
 
         <div class="mode-switch">
@@ -202,6 +298,24 @@ onMounted(() => {
           </div>
 
           <article class="info-card">
+            <p class="card-label">关键证据</p>
+            <div v-if="evidenceItems.length" class="evidence-list">
+              <div
+                v-for="item in evidenceItems"
+                :key="`${item.type}-${item.quote}`"
+                class="evidence-item"
+              >
+                <div class="evidence-meta">
+                  <span>{{ item.speaker === 'user' ? '我' : '对方' }}</span>
+                  <span>{{ item.score.toFixed(2) }}</span>
+                </div>
+                <p>{{ item.quote }}</p>
+              </div>
+            </div>
+            <p v-else class="legacy-note">这次没有提取到足够明确的证据句。</p>
+          </article>
+
+          <article class="info-card">
             <p class="card-label">下一步建议</p>
             <ul>
               <li v-for="item in activeRecord.result.suggestions" :key="item">{{ item }}</li>
@@ -220,96 +334,14 @@ onMounted(() => {
             <p>{{ activeRecord.result.rationale }}</p>
           </article>
 
-          <article class="info-card strategy-card">
-            <p class="card-label">策略决策</p>
-            <template v-if="hasStrategyDetails">
-              <div class="strategy-head">
-                <strong>{{ activeRecord.result.strategy.label }}</strong>
-                <span :class="['strategy-tag', activeRecord.result.strategy.type]">
-                  {{ activeRecord.result.strategy.type }}
-                </span>
-              </div>
-              <p>{{ activeRecord.result.strategy.reason }}</p>
-            </template>
-            <p v-else class="legacy-note">该历史记录生成于旧版分析链路，暂无策略决策数据。</p>
-          </article>
-
-          <div class="analysis-grid">
-            <article class="info-card">
-              <p class="card-label">语义标签</p>
-              <template v-if="hasSemanticDetails">
-                <p>话题类型：{{ activeRecord.result.semantic.topicType || '未标注' }}</p>
-                <ul class="compact-list">
-                  <li v-for="[key, value] in semanticSignals" :key="key">
-                    {{ key }}：{{ value.toFixed(2) }}
-                  </li>
-                </ul>
-              </template>
-              <p v-else class="legacy-note">该历史记录生成于旧版分析链路，暂无语义标签数据。</p>
-            </article>
-            <article class="info-card">
-              <p class="card-label">阶段融合依据</p>
-              <template v-if="activeRecord.result.debug.stageReason">
-                <p>{{ activeRecord.result.debug.stageReason }}</p>
-                <ul class="compact-list">
-                  <li v-for="item in activeRecord.result.debug.stageCandidates" :key="item">{{ item }}</li>
-                </ul>
-              </template>
-              <p v-else class="legacy-note">该历史记录生成于旧版分析链路，暂无阶段融合依据。</p>
-            </article>
-          </div>
-
-          <article class="info-card">
-            <p class="card-label">关键证据句</p>
-            <div v-if="activeRecord.result.semantic.evidence?.length" class="evidence-list">
-              <div
-                v-for="item in activeRecord.result.semantic.evidence"
-                :key="`${item.type}-${item.quote}`"
-                class="evidence-item"
-              >
-                <div class="evidence-meta">
-                  <span>{{ item.type }}</span>
-                  <span>{{ item.speaker === 'user' ? '我' : '对方' }}</span>
-                  <span>{{ item.score.toFixed(2) }}</span>
-                </div>
-                <p>{{ item.quote }}</p>
-              </div>
-            </div>
-            <p v-else class="legacy-note">当前记录没有可展示的证据句，通常是旧版记录或本次分析未提取到强证据。</p>
-          </article>
-
-          <div class="analysis-grid">
-            <article class="info-card">
-              <p class="card-label">量化参数</p>
-              <div v-if="paramTraces.length" class="trace-list">
-                <div v-for="[key, trace] in paramTraces" :key="key" class="trace-item">
-                  <div class="trace-head">
-                    <strong>{{ key }}</strong>
-                    <span>{{ trace.value.toFixed(2) }}</span>
-                  </div>
-                  <small>基准：{{ trace.basis.toFixed(2) }}</small>
-                  <ul class="compact-list">
-                    <li v-for="item in trace.adjustments" :key="item">{{ item }}</li>
-                  </ul>
-                </div>
-              </div>
-              <p v-else class="legacy-note">当前记录没有量化参数追踪数据。</p>
-            </article>
-            <article class="info-card">
-              <p class="card-label">指标输入</p>
-              <ul v-if="metricInputs.length" class="compact-list">
-                <li v-for="[key, value] in metricInputs" :key="key">
-                  {{ key }}：{{ value.toFixed(2) }}
-                </li>
-              </ul>
-              <p v-else class="legacy-note">当前记录没有指标输入追踪数据。</p>
-            </article>
-          </div>
-
           <article class="info-card risk-card">
             <p class="card-label">风险提醒</p>
             <p>{{ activeRecord.result.riskNote }}</p>
           </article>
+
+          <button class="primary-action save-action" :disabled="loading || isSaved" @click="saveCurrentAnalysis">
+            {{ isSaved ? '已保存' : '保存分析' }}
+          </button>
 
           <article class="info-card conversation-card">
             <p class="card-label">聊天记录</p>
@@ -333,21 +365,19 @@ onMounted(() => {
       <aside class="panel history-panel">
         <div class="section-head">
           <h2>分析历史</h2>
-          <p>最近的分析会保存在数据库里，方便回看。</p>
+          <p>这里只显示你主动保存的分析。</p>
         </div>
 
         <div v-if="history.length === 0" class="empty-history">还没有历史记录。</div>
 
-        <button
-          v-for="item in history"
-          :key="item.id"
-          class="history-item"
-          @click="openHistory(item.id)"
-        >
-          <span class="history-stage">{{ item.stage }}</span>
-          <strong>{{ item.summary }}</strong>
-          <small>{{ formatDate(item.createdAt) }}</small>
-        </button>
+        <div v-for="item in history" :key="item.id" class="history-item">
+          <button class="history-open" @click="openHistory(item.id)">
+            <span class="history-stage">{{ item.stage }}</span>
+            <strong>{{ item.summary }}</strong>
+            <small>{{ formatDate(item.createdAt) }}</small>
+          </button>
+          <button class="delete-button" @click="removeHistory(item.id)">删除</button>
+        </div>
       </aside>
     </main>
   </div>

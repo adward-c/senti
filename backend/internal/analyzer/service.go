@@ -46,6 +46,41 @@ func (s *Service) StoreUpload(uploadDir string, fileName string, data []byte) (s
 	return path, nil
 }
 
+func (s *Service) PromoteUpload(tempPath string, uploadDir string) (string, error) {
+	if tempPath == "" {
+		return "", nil
+	}
+	if err := os.MkdirAll(uploadDir, 0o755); err != nil {
+		return "", err
+	}
+	targetPath := filepath.Join(uploadDir, filepath.Base(tempPath))
+	if tempPath == targetPath {
+		return targetPath, nil
+	}
+	if err := os.Rename(tempPath, targetPath); err != nil {
+		return "", err
+	}
+	return targetPath, nil
+}
+
+func (s *Service) CleanupTempUploads(tempDir string, maxAge time.Duration) {
+	entries, err := os.ReadDir(tempDir)
+	if err != nil {
+		return
+	}
+	cutoff := time.Now().Add(-maxAge)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		path := filepath.Join(tempDir, entry.Name())
+		info, err := entry.Info()
+		if err == nil && info.ModTime().Before(cutoff) {
+			_ = os.Remove(path)
+		}
+	}
+}
+
 func (s *Service) AnalyzeText(ctx context.Context, sourceText string) (domain.AnalysisRecord, error) {
 	return s.analyze(ctx, "text", sourceText, "", "")
 }
@@ -116,9 +151,6 @@ func (s *Service) analyze(ctx context.Context, inputType, sourceText, imagePath,
 	record.Result.Rationale = safeText(narrative.Rationale, fallbackRationale(record))
 	record.Result.RiskNote = safeText(narrative.RiskNote, fallbackRisk(record))
 
-	if err := s.repo.CreateAnalysis(ctx, record); err != nil {
-		return domain.AnalysisRecord{}, err
-	}
 	return record, nil
 }
 

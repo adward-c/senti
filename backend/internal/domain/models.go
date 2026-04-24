@@ -103,6 +103,8 @@ type AnalysisResult struct {
 
 type AnalysisRecord struct {
 	ID                 string         `json:"id"`
+	UserID             string         `json:"userId,omitempty"`
+	Saved              bool           `json:"saved"`
 	InputType          string         `json:"inputType"`
 	SourceText         string         `json:"sourceText"`
 	ImagePath          string         `json:"imagePath,omitempty"`
@@ -117,4 +119,11 @@ type AnalysisSummary struct {
 	Stage     string    `json:"stage"`
 	Summary   string    `json:"summary"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+type User struct {
+	ID           string    `json:"id"`
+	Username     string    `json:"username"`
+	PasswordHash string    `json:"-"`
+	CreatedAt    time.Time `json:"createdAt"`
 }

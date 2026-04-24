@@ -151,7 +151,10 @@ button {
 }
 
 textarea,
-input[type="file"] {
+input[type="file"],
+input[type="text"],
+input[type="password"],
+input:not([type]) {
   width: 100%;
   border: 1px solid rgba(124, 91, 73, 0.18);
   background: rgba(255, 252, 248, 0.92);
@@ -194,6 +197,24 @@ textarea {
 .primary-action:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.ghost-button,
+.delete-button {
+  border: 1px solid rgba(155, 92, 73, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #7b4c3f;
+  padding: 10px 14px;
+}
+
+.auth-panel {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.save-action {
+  margin-bottom: 18px;
 }
 
 .error-banner {
@@ -404,13 +425,28 @@ textarea {
 .history-item {
   width: 100%;
   text-align: left;
-  border: 0;
+  border: 1px solid rgba(125, 88, 69, 0.1);
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.95);
   padding: 16px;
   margin-bottom: 12px;
   display: grid;
   gap: 8px;
+}
+
+.history-open {
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  background: transparent;
+}
+
+.delete-button {
+  justify-self: start;
+  padding: 8px 12px;
+  color: #a23333;
 }
 
 .history-stage {
